@@ -1,0 +1,261 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{wordgame}
+\RequirePackage{xcolor}
+\RequirePackage{pgfkeys}
+\RequirePackage{pgfparser}
+\RequirePackage{pgf}
+
+\colorlet{wordgame@almost@bg}  {yellow!85!black}
+\colorlet{wordgame@correct@bg} {green!80!black}
+\colorlet{wordgame@wrong@bg}   {gray}
+\colorlet{wordgame@noeval@bg}  {white}
+\colorlet{wordgame@noletter@bg}{white}
+
+\colorlet{wordgame@almost@fg}  {white}
+\colorlet{wordgame@correct@fg} {white}
+\colorlet{wordgame@wrong@fg}   {white}
+\colorlet{wordgame@noeval@fg}  {black}
+\colorlet{wordgame@noletter@fg}{gray}
+
+%% The parser
+\newif\ifwordgame@newline
+
+%%% normal parser
+\pgfparserdef{wordgame@manual}{initial}\end[m]{\pgfparserswitch{final}}
+
+\pgfparserdef{wordgame@manual}{initial};
+    {%
+        \def\wordgamelettercount{0}%
+        \edef\wordgamerowcount{\the\numexpr\wordgamerowcount+1\relax}%
+        \wordgame@newlinetrue
+    }
+
+\pgfparserdef{wordgame@manual}{initial}[[r{]}]{\wordgameset{#1}}
+
+\pgfparserdeffinal{wordgame@manual}{\end{wordgame}}
+
+%%% setup parser for smart
+\pgfparserdef{wordgame@pre@setup}{initial};
+    {%
+        \def\wordgamelettercount{0}%
+        \edef\wordgamerowcount{\the\numexpr\wordgamerowcount+1\relax}%
+    }
+
+\pgfparserdef{wordgame@pre@setup}{initial}\endwordgame@pre@setup
+    {%
+        \pgfparserswitch{final}%
+    }
+
+%%% smart parser
+\pgfparserdef{wordgame@pre}{initial}\end[m]{\pgfparserswitch{final}}
+
+\pgfparserdeffinal{wordgame@pre}{\end{wordgame}}
+
+\pgfparserdef{wordgame@pre}{initial}<[r>]
+    {%
+        \wordgameset{every letter, letter/all*={#1}}%
+    }
+
+    \pgfparserdef{wordgame@pre}{initial};
+    {%
+        \def\wordgamelettercount{0}%
+        \edef\wordgamerowcount{\the\numexpr\wordgamerowcount+1\relax}%
+        \wordgame@newlinetrue
+    }
+
+\pgfparserdef{wordgame@pre}{initial}[[r{]}]{\wordgameset{#1}}
+
+\pgfparserdefunknown{wordgame@pre}{initial}
+    {%
+        \wordgameset{every letter, letter/all*/.expand once=\pgfparserletter}%
+    }
+
+\pgfparserset{wordgame@pre/silent=true}
+
+%% The macros
+\newcommand*{\wg@vo}[1]{\pgfkeysvalueof{/wordgame/#1}}%
+\newcommand*{\wordgameset}{\pgfqkeys{/wordgame}}
+\newcommand*{\miniwordgame}[2][]{\begin{wordgame}[#1]#2\end{wordgame}}
+\newenvironment*{wordgame}[1][]{%
+    \noindent
+    \let\wordgame@parser\@empty
+    \wordgameset{every wordgame,#1,/wordgame/at start/.try}%
+    \def\wordgamelettercount{0}%
+    \def\wordgamerowcount{1}%
+    \pgfparserparse{wordgame@\wordgame@parser}%
+}{\wordgameset{at end/.try}\ignorespacesafterend}
+
+%% The settings
+\wordgameset{
+    every wordgame/.style=,
+    color/.code=\pgfqkeys{/wordgame/color}{#1},
+    color={
+        correct bg/.initial   = wordgame@correct@bg,
+        wrong bg/.initial     = wordgame@wrong@bg,
+        almost bg/.initial    = wordgame@almost@bg,
+        no eval bg/.initial   = wordgame@noeval@bg,
+        no letter bg/.initial = wordgame@noletter@bg,
+        correct fg/.initial   = wordgame@correct@fg,
+        wrong fg/.initial     = wordgame@wrong@fg,
+        almost fg/.initial    = wordgame@almost@fg,
+        no eval fg/.initial   = wordgame@noeval@fg,
+        no letter fg/.initial = wordgame@noletter@fg,
+    },
+    every letter/.code=%
+        \edef\wordgamelettercount{\the\numexpr\wordgamelettercount+1\relax}%
+        \ifwordgame@newline\expandafter\@firstofone\else\expandafter\@gobble\fi
+        {%
+            \wordgame@newlinefalse
+            \wordgameset{letter/new line/.try}%
+        },
+    new parse/.code 2 args={%
+        \pgfparserdef{wordgame@manual}{initial}#1[m]{\wordgameset{every letter,letter/#2={##1}}}%
+        \pgfparserdef{wordgame@pre@setup}{initial}#1{%
+            \wordgameset{
+                every letter,% /utils/exec=\errmessage{letter*/r\wordgamerowcount c\wordgamelettercount/.style},
+                letter*/r\wordgamerowcount c\wordgamelettercount/.style={letter/#2={####1}}%
+            }%
+        }%
+    },
+    new parse = {+}{correct},
+    new parse = {-}{wrong},
+    new parse = {~}{almost},
+    new parse = {.}{no eval},
+    new parse = {?}{no letter},
+    default letter keys/.style={
+        letter/correct/.style   = {letter/all = {\wg@vo{color/correct fg}}{\wg@vo{color/correct bg}}{##1}},
+        letter/wrong/.style     = {letter/all = {\wg@vo{color/wrong fg}}{\wg@vo{color/wrong bg}}{##1}},
+        letter/almost/.style    = {letter/all = {\wg@vo{color/almost fg}}{\wg@vo{color/almost bg}}{##1}},
+        letter/no eval/.style   = {letter/no all = {\wg@vo{color/no eval fg}}{\wg@vo{color/no eval bg}}{##1}},
+        letter/no letter/.style = {letter/no all = {\wg@vo{color/no letter fg}}{\wg@vo{color/no letter bg}}{##1}},
+    },
+    mode/.is choice,
+    mode/manual/.code=\def\wordgame@parser{manual},
+    mode/pre/.code=\def\wordgame@parser{pre},
+    style/.is choice,
+    style/plain/.style={% style: plain
+        default letter keys,
+        letter/no all/.style n args={3}{letter/all={##2}{##1}{##3}},
+        letter/all/.code n args={3}{%
+            \textcolor{##2}{##3}%
+        },
+        letter/new line/.code=\\,
+        at start/.code=\ttfamily,
+        letter/unknown/.style={letter/no letter={##1}},
+    },
+    % style/plain-nott/.style={
+    %     style=plain,
+    %     at start/.code=,
+    %     letter/all/.code n args={3}{%
+    %         \hspace{.4em}%
+    %         \clap{\textcolor{##1}{##3}}%
+    %         \hspace{.4em}%
+    %     }
+    % },
+    style/boxes/.style={% style: boxes
+        default letter keys,
+        color={
+            no eval bg=wordgame@noeval@fg,
+            no letter bg=wordgame@noletter@fg,
+        },
+        letter/all/.code n args={3}{%
+            \ifnum\wordgamelettercount>1 \hspace{.2em}\fi
+            \textcolor{##2}{\rule[-.4em]{1.5em}{1.5em}}%
+            \hspace{-.75em}%
+            \clap{\textcolor{##1}{##3}}%
+            \hspace{.75em}%
+        },
+        letter/no all/.code n args={3}{%
+            \ifnum\wordgamelettercount>1 \hspace{.2em}\fi
+            \textcolor{##1}{\fboxsep=-.4pt \fboxrule=.4pt \fbox{\rule[-.4em]{0pt}{1.5em}\rule{1.5em}{0pt}}}%
+            \hspace{-.75em}%
+            \clap{\textcolor{##1}{##3}}%
+            \hspace{.75em}%
+        },
+        letter/new line/.code=\\,
+        letter/unknown/.style={letter/no letter={##1}},
+        at start/.code=\sffamily
+    },
+    % % smart parser
+    pre/.code={%
+        \wordgameset{mode=pre}%
+        \def\wordgamelettercount{0}%
+        \def\wordgamerowcount{1}%
+        \pgfparserparse{wordgame@pre@setup}#1\endwordgame@pre@setup
+    },
+    letter/all*/.code={%
+        \wordgameset{letter*/r\wordgamerowcount c\wordgamelettercount/.try={#1}}%
+        \ifpgfkeyssuccess
+            \expandafter\@gobble
+        \else
+            \expandafter\@firstofone
+        \fi
+        {%
+            \wordgameset{letter/unknown={#1}}%
+        }%
+    }
+}
+
+\wordgameset{
+    style/pgf/.style={% style: PGF
+        /pgf/minimum size=1.5em, /pgf/inner sep=+0pt,
+        letter/correct/.style  = {letter/all = {pgf/correct  }{##1}},
+        letter/wrong/.style    = {letter/all = {pgf/wrong    }{##1}},
+        letter/almost/.style   = {letter/all = {pgf/almost   }{##1}},
+        letter/no eval/.style  = {letter/all = {pgf/no eval  }{##1}},
+        letter/no letter/.style= {letter/all = {pgf/no letter}{##1}},
+        letter/unknown/.style  = {letter/all = {pgf/no letter}{##1}},
+        pgf/fill color/.initial = black,
+        pgf/draw color/.initial = black,
+        pgf/text color/.initial = white,
+        pgf/correct/.style={
+            pgf/fill color=wordgame@correct@bg,
+            pgf/text color=wordgame@correct@fg,
+            pgf/pathstyle/.style=fill
+        },
+        pgf/wrong/.style={
+            pgf/fill color=wordgame@wrong@bg,
+            pgf/text color=wordgame@wrong@fg,
+            pgf/pathstyle/.style=fill
+        },
+        pgf/almost/.style ={
+            pgf/fill color=wordgame@almost@bg,
+            pgf/text color=wordgame@almost@fg,
+            pgf/pathstyle/.style=fill
+        },
+        pgf/no eval/.style={
+            pgf/draw color=wordgame@noeval@fg,
+            pgf/text color=wordgame@noeval@fg,
+            pgf/pathstyle/.style=stroke
+        },
+        pgf/no letter/.style={
+            pgf/draw color=wordgame@noletter@fg,
+            pgf/text color=wordgame@noletter@fg,
+            pgf/pathstyle/.style=stroke,
+        },
+        pgf/every node/.style={
+            pgf/draw color=gray,
+            pgf/text color=black,
+            pgf/fill color=black,
+            pgf/pathstyle/.style=stroke},
+        letter/all/.code 2 args={%
+            \begingroup % grouping because of transformation
+                \wordgameset{pgf/every node,##1}%
+                \pgfsetfillcolor{\wg@vo{pgf/fill color}}%
+                \pgfsetstrokecolor{\wg@vo{pgf/draw color}}%
+                \pgftransformshift{\pgfpointxy{\wordgamelettercount}{\wordgamerowcount}}%
+                \pgfnode{rectangle}{base}
+                    {\textcolor{\wg@vo{pgf/text color}}%
+                               {\vphantom{M}##2}}{@}
+                    {\pgfusepath{/wordgame/pgf/pathstyle}}%
+            \endgroup},
+        at end/.code=\endpgfpicture,
+        at start/.code=%
+            \pgfpicture\sffamily\pgfsetbaseline{-1.7em}%
+            \pgfsetcornersarced{\pgfqpoint{3pt}{3pt}}%
+            \pgfsetxvec{\pgfpoint{+1.7em}{+0pt}}%
+            \pgfsetyvec{\pgfpoint{+0pt}{+-1.7em}%
+        },
+    }
+}
+
