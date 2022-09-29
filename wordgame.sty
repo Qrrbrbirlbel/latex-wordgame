@@ -75,7 +75,7 @@
 %% The macros
 \newcommand*{\wg@vo}[1]{\pgfkeysvalueof{/wordgame/#1}}%
 \newcommand*{\wordgameset}{\pgfqkeys{/wordgame}}
-\newcommand*{\miniwordgame}[2][]{\begin{wordgame}[#1]#2\end{wordgame}}
+\newcommand*{\miniwordgame}[2][]{\begin{wordgame}[#1]#2\end{wordgame}\relax}
 \newenvironment*{wordgame}[1][]{%
     \noindent
     \let\wordgame@parser\@empty
@@ -87,7 +87,7 @@
 
 %% The settings
 \wordgameset{
-    every wordgame/.style=,
+    every wordgame/.style={mode=manual},
     color/.code=\pgfqkeys{/wordgame/color}{#1},
     color={
         correct bg/.initial   = wordgame@correct@bg,
@@ -112,7 +112,7 @@
         \pgfparserdef{wordgame@manual}{initial}#1[m]{\wordgameset{every letter,letter/#2={##1}}}%
         \pgfparserdef{wordgame@pre@setup}{initial}#1{%
             \wordgameset{
-                every letter,% /utils/exec=\errmessage{letter*/r\wordgamerowcount c\wordgamelettercount/.style},
+                every letter,
                 letter*/r\wordgamerowcount c\wordgamelettercount/.style={letter/#2={####1}}%
             }%
         }%
@@ -143,15 +143,15 @@
         at start/.code=\ttfamily,
         letter/unknown/.style={letter/no letter={##1}},
     },
-    % style/plain-nott/.style={
-    %     style=plain,
-    %     at start/.code=,
-    %     letter/all/.code n args={3}{%
-    %         \hspace{.4em}%
-    %         \clap{\textcolor{##1}{##3}}%
-    %         \hspace{.4em}%
-    %     }
-    % },
+    style/plain-nott/.style={
+        style=plain,
+        at start/.code=,
+        letter/all/.code n args={3}{%
+            \hspace{.4em}%
+            \clap{\textcolor{##2}{##3}}%
+            \hspace{.4em}%
+        }
+    },
     style/boxes/.style={% style: boxes
         default letter keys,
         color={
