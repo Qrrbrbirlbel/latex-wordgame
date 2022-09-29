@@ -141,7 +141,7 @@
         },
         parser/new line/.code=\\,
         at start/.code=\ttfamily,
-        parser/unknown/.style={letter/no letter={##1}},
+        letter/unknown/.style={letter/no letter={##1}},
     },
     style/plain-nott/.style={
         style=plain,
@@ -173,7 +173,7 @@
             \hspace{.75em}%
         },
         parser/new line/.code=\\,
-        parser/unknown/.style={letter/no letter={##1}},
+        letter/unknown/.style={letter/no letter={##1}},
         at start/.code=\sffamily
     },
     % % smart parser
@@ -191,7 +191,7 @@
             \expandafter\@firstofone
         \fi
         {%
-            \wordgameset{parser/unknown={#1}}%
+            \wordgameset{letter/unknown={#1}}%
         }%
     }
 }
@@ -204,7 +204,7 @@
         letter/almost/.style   = {parser/all = {pgf/almost   }{##1}},
         letter/no eval/.style  = {parser/all = {pgf/no eval  }{##1}},
         letter/no letter/.style= {parser/all = {pgf/no letter}{##1}},
-        parser/unknown/.style  = {parser/all = {pgf/no letter}{##1}},
+        letter/unknown/.style  = {parser/all = {pgf/no letter}{##1}},
         pgf/fill color/.initial = black,
         pgf/draw color/.initial = black,
         pgf/text color/.initial = white,
