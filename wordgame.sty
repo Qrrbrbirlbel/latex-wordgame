@@ -53,7 +53,7 @@
 
 \pgfparserdef{wordgame@pre}{initial}<[r>]
     {%
-        \wordgameset{every letter, letter/all*={#1}}%
+        \wordgameset{every letter, parser/all*={#1}}%
     }
 
     \pgfparserdef{wordgame@pre}{initial};
@@ -67,7 +67,7 @@
 
 \pgfparserdefunknown{wordgame@pre}{initial}
     {%
-        \wordgameset{every letter, letter/all*/.expand once=\pgfparserletter}%
+        \wordgameset{every letter, parser/all*/.expand once=\pgfparserletter}%
     }
 
 \pgfparserset{wordgame@pre/silent=true}
@@ -106,14 +106,14 @@
         \ifwordgame@newline\expandafter\@firstofone\else\expandafter\@gobble\fi
         {%
             \wordgame@newlinefalse
-            \wordgameset{letter/new line/.try}%
+            \wordgameset{parser/new line/.try}%
         },
     new parse/.code 2 args={%
         \pgfparserdef{wordgame@manual}{initial}#1[m]{\wordgameset{every letter,letter/#2={##1}}}%
         \pgfparserdef{wordgame@pre@setup}{initial}#1{%
             \wordgameset{
                 every letter,
-                letter*/r\wordgamerowcount c\wordgamelettercount/.style={letter/#2={####1}}%
+                parser*/r\wordgamerowcount c\wordgamelettercount/.style={letter/#2={####1}}%
             }%
         }%
     },
@@ -123,11 +123,11 @@
     new parse = {.}{no eval},
     new parse = {?}{no letter},
     default letter keys/.style={
-        letter/correct/.style   = {letter/all = {\wg@vo{color/correct fg}}{\wg@vo{color/correct bg}}{##1}},
-        letter/wrong/.style     = {letter/all = {\wg@vo{color/wrong fg}}{\wg@vo{color/wrong bg}}{##1}},
-        letter/almost/.style    = {letter/all = {\wg@vo{color/almost fg}}{\wg@vo{color/almost bg}}{##1}},
-        letter/no eval/.style   = {letter/no all = {\wg@vo{color/no eval fg}}{\wg@vo{color/no eval bg}}{##1}},
-        letter/no letter/.style = {letter/no all = {\wg@vo{color/no letter fg}}{\wg@vo{color/no letter bg}}{##1}},
+        letter/correct/.style   = {parser/all = {\wg@vo{color/correct fg}}{\wg@vo{color/correct bg}}{##1}},
+        letter/wrong/.style     = {parser/all = {\wg@vo{color/wrong fg}}{\wg@vo{color/wrong bg}}{##1}},
+        letter/almost/.style    = {parser/all = {\wg@vo{color/almost fg}}{\wg@vo{color/almost bg}}{##1}},
+        letter/no eval/.style   = {parser/no all = {\wg@vo{color/no eval fg}}{\wg@vo{color/no eval bg}}{##1}},
+        letter/no letter/.style = {parser/no all = {\wg@vo{color/no letter fg}}{\wg@vo{color/no letter bg}}{##1}},
     },
     mode/.is choice,
     mode/manual/.code=\def\wordgame@parser{manual},
@@ -135,18 +135,18 @@
     style/.is choice,
     style/plain/.style={% style: plain
         default letter keys,
-        letter/no all/.style n args={3}{letter/all={##2}{##1}{##3}},
-        letter/all/.code n args={3}{%
+        parser/no all/.style n args={3}{parser/all={##2}{##1}{##3}},
+        parser/all/.code n args={3}{%
             \textcolor{##2}{##3}%
         },
-        letter/new line/.code=\\,
+        parser/new line/.code=\\,
         at start/.code=\ttfamily,
-        letter/unknown/.style={letter/no letter={##1}},
+        parser/unknown/.style={letter/no letter={##1}},
     },
     style/plain-nott/.style={
         style=plain,
         at start/.code=,
-        letter/all/.code n args={3}{%
+        parser/all/.code n args={3}{%
             \hspace{.4em}%
             \clap{\textcolor{##2}{##3}}%
             \hspace{.4em}%
@@ -158,22 +158,22 @@
             no eval bg=wordgame@noeval@fg,
             no letter bg=wordgame@noletter@fg,
         },
-        letter/all/.code n args={3}{%
+        parser/all/.code n args={3}{%
             \ifnum\wordgamelettercount>1 \hspace{.2em}\fi
             \textcolor{##2}{\rule[-.4em]{1.5em}{1.5em}}%
             \hspace{-.75em}%
             \clap{\textcolor{##1}{##3}}%
             \hspace{.75em}%
         },
-        letter/no all/.code n args={3}{%
+        parser/no all/.code n args={3}{%
             \ifnum\wordgamelettercount>1 \hspace{.2em}\fi
             \textcolor{##1}{\fboxsep=-.4pt \fboxrule=.4pt \fbox{\rule[-.4em]{0pt}{1.5em}\rule{1.5em}{0pt}}}%
             \hspace{-.75em}%
             \clap{\textcolor{##1}{##3}}%
             \hspace{.75em}%
         },
-        letter/new line/.code=\\,
-        letter/unknown/.style={letter/no letter={##1}},
+        parser/new line/.code=\\,
+        parser/unknown/.style={letter/no letter={##1}},
         at start/.code=\sffamily
     },
     % % smart parser
@@ -183,15 +183,15 @@
         \def\wordgamerowcount{1}%
         \pgfparserparse{wordgame@pre@setup}#1\endwordgame@pre@setup
     },
-    letter/all*/.code={%
-        \wordgameset{letter*/r\wordgamerowcount c\wordgamelettercount/.try={#1}}%
+    parser/all*/.code={%
+        \wordgameset{parser*/r\wordgamerowcount c\wordgamelettercount/.try={#1}}%
         \ifpgfkeyssuccess
             \expandafter\@gobble
         \else
             \expandafter\@firstofone
         \fi
         {%
-            \wordgameset{letter/unknown={#1}}%
+            \wordgameset{parser/unknown={#1}}%
         }%
     }
 }
@@ -199,12 +199,12 @@
 \wordgameset{
     style/pgf/.style={% style: PGF
         /pgf/minimum size=1.5em, /pgf/inner sep=+0pt,
-        letter/correct/.style  = {letter/all = {pgf/correct  }{##1}},
-        letter/wrong/.style    = {letter/all = {pgf/wrong    }{##1}},
-        letter/almost/.style   = {letter/all = {pgf/almost   }{##1}},
-        letter/no eval/.style  = {letter/all = {pgf/no eval  }{##1}},
-        letter/no letter/.style= {letter/all = {pgf/no letter}{##1}},
-        letter/unknown/.style  = {letter/all = {pgf/no letter}{##1}},
+        letter/correct/.style  = {parser/all = {pgf/correct  }{##1}},
+        letter/wrong/.style    = {parser/all = {pgf/wrong    }{##1}},
+        letter/almost/.style   = {parser/all = {pgf/almost   }{##1}},
+        letter/no eval/.style  = {parser/all = {pgf/no eval  }{##1}},
+        letter/no letter/.style= {parser/all = {pgf/no letter}{##1}},
+        parser/unknown/.style  = {parser/all = {pgf/no letter}{##1}},
         pgf/fill color/.initial = black,
         pgf/draw color/.initial = black,
         pgf/text color/.initial = white,
@@ -238,7 +238,7 @@
             pgf/text color=black,
             pgf/fill color=black,
             pgf/pathstyle/.style=stroke},
-        letter/all/.code 2 args={%
+        parser/all/.code 2 args={%
             \begingroup % grouping because of transformation
                 \wordgameset{pgf/every node,##1}%
                 \pgfsetfillcolor{\wg@vo{pgf/fill color}}%
