@@ -79,15 +79,17 @@
 \newenvironment*{wordgame}[1][]{%
     \noindent
     \let\wordgame@parser\@empty
-    \wordgameset{every wordgame,#1,/wordgame/at start/.try}%
+    \wordgameset{every wordgame,#1}%
+    \pgfkeysvalueof{/wordgame/at start}%
     \def\wordgamelettercount{0}%
     \def\wordgamerowcount{1}%
     \pgfparserparse{wordgame@\wordgame@parser}%
-}{\wordgameset{at end/.try}\ignorespacesafterend}
+}{\pgfkeysvalueof{/wordgame/at end}\ignorespacesafterend}
 
 %% The settings
 \wordgameset{
     every wordgame/.style={mode=manual},
+    at start/.initial=, at end/.initial=,
     color/.code=\pgfqkeys{/wordgame/color}{#1},
     color={
         correct bg/.initial   = wordgame@correct@bg,
@@ -128,6 +130,7 @@
         letter/almost/.style    = {parser/all = {\wg@vo{color/almost fg}}{\wg@vo{color/almost bg}}{##1}},
         letter/no eval/.style   = {parser/no all = {\wg@vo{color/no eval fg}}{\wg@vo{color/no eval bg}}{##1}},
         letter/no letter/.style = {parser/no all = {\wg@vo{color/no letter fg}}{\wg@vo{color/no letter bg}}{##1}},
+        letter/unknown/.style   = {letter/no letter = {##1}},
     },
     mode/.is choice,
     mode/manual/.code=\def\wordgame@parser{manual},
@@ -140,12 +143,12 @@
             \textcolor{##2}{##3}%
         },
         parser/new line/.code=\\,
-        at start/.code=\ttfamily,
-        letter/unknown/.style={letter/no letter={##1}},
+        at start=\ttfamily,
+        at end=,
     },
     style/plain-nott/.style={
         style=plain,
-        at start/.code=,
+        at start=,
         parser/all/.code n args={3}{%
             \hspace{.4em}%
             \clap{\textcolor{##2}{##3}}%
@@ -173,8 +176,8 @@
             \hspace{.75em}%
         },
         parser/new line/.code=\\,
-        letter/unknown/.style={letter/no letter={##1}},
-        at start/.code=\sffamily
+        at start=\sffamily,
+        at end=,
     },
     % % smart parser
     pre/.code={%
@@ -249,8 +252,8 @@
                                {\vphantom{M}##2}}{@}
                     {\pgfusepath{/wordgame/pgf/pathstyle}}%
             \endgroup},
-        at end/.code=\endpgfpicture,
-        at start/.code=%
+        at end=\endpgfpicture,
+        at start=%
             \pgfpicture\sffamily\pgfsetbaseline{-1.7em}%
             \pgfsetcornersarced{\pgfqpoint{3pt}{3pt}}%
             \pgfsetxvec{\pgfpoint{+1.7em}{+0pt}}%
